@@ -1,0 +1,64 @@
+name: Compilar APK OnAirPlay
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Descargar repositorio
+      uses: actions/checkout@v4
+
+    - name: Configurar Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Configurar Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Descomprimir y preparar proyecto
+      run: |
+        unzip -o *.zip
+
+        # Busca si existe gradlew en subcarpetas y lo mueve a la raíz
+        DIR=$(find . -maxdepth 2 -name gradlew -printf '%h\n' | head -n 1)
+        if [ -n "$DIR" ] && [ "$DIR" != "." ]; then
+          cp -r $DIR/* .
+          cp -r $DIR/.* . 2>/dev/null || true
+        fi
+
+        if [ ! -f "gradlew" ]; then
+          gradle wrapper
+        fi
+        chmod +x gradlew || true
+
+    - name: Compilar APK Debug
+      run: |
+        if [ -f "./gradlew" ]; then
+          ./gradlew assembleDebug --stacktrace
+        else
+          gradle assembleDebug --stacktrace
+        fi
+
+    - name: Renombrar APK final
+      run: |
+        APK_PATH=$(find . -name "*.apk" | head -n 1)
+        if [ -n "$APK_PATH" ]; then
+          mv "$APK_PATH" ./OnAirPlay.apk
+        else
+          echo "Error: No se encontro ningun APK generado"
+          exit 1
+        fi
+
+    - name: Guardar APK OnAirPlay
+      uses: actions/upload-artifact@v4
+      with:
+        name: OnAirPlay-Instalador
+        path: OnAirPlay.apk
+        
