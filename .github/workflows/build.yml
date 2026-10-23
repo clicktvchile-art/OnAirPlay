@@ -40,7 +40,9 @@ jobs:
           gradle wrapper || true
         fi
         chmod +x gradlew || true
-
+    - name: Configurar servidor de activación
+      run: |
+        find . -path '*/app/build.gradle.kts' -type f -exec sed -i 's#https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec#https://script.google.com/macros/s/AKfycbzyOLJ6F1kytvtVvTuvL3GjLwWPidcKIfUIqf8myioeg2_XMc15IOwVKyCZ7ryu_NK9_A/exec#g' {} \;
     - name: Compilar APK Debug
       run: |
         if [ -f "./gradlew" ]; then
