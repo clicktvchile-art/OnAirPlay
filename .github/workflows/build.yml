@@ -25,16 +25,19 @@ jobs:
     - name: Descomprimir y preparar proyecto
       run: |
         unzip -o *.zip
-
-        # Busca si existe gradlew en subcarpetas y lo mueve a la raíz
-        DIR=$(find . -maxdepth 2 -name gradlew -printf '%h\n' | head -n 1)
-        if [ -n "$DIR" ] && [ "$DIR" != "." ]; then
-          cp -r $DIR/* .
-          cp -r $DIR/.* . 2>/dev/null || true
+        
+        # Localiza la carpeta donde ChatGPT guardo el proyecto Android
+        PROJECT_DIR=$(find . -mindepth 2 -maxdepth 3 \( -name "settings.gradle*" -o -name "build.gradle*" \) ! -path "*/app/*" | head -n 1 | xargs -r dirname)
+        
+        if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "." ]; then
+          echo "Proyecto localizado en: $PROJECT_DIR"
+          cp -rf "$PROJECT_DIR"/* .
+          cp -rf "$PROJECT_DIR"/.* . 2>/dev/null || true
         fi
-
+        
+        # Crea el ejecutable gradlew si falta
         if [ ! -f "gradlew" ]; then
-          gradle wrapper
+          gradle wrapper || true
         fi
         chmod +x gradlew || true
 
@@ -50,7 +53,7 @@ jobs:
       run: |
         APK_PATH=$(find . -name "*.apk" | head -n 1)
         if [ -n "$APK_PATH" ]; then
-          mv "$APK_PATH" ./OnAirPlay.apk
+          cp "$APK_PATH" ./OnAirPlay.apk
         else
           echo "Error: No se encontro ningun APK generado"
           exit 1
