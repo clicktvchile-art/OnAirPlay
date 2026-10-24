@@ -4,7 +4,9 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
@@ -17,32 +19,31 @@ jobs:
       - name: Descargar repositorio
         uses: actions/checkout@v4
 
-      - name: Descomprimir proyecto Android
-        run: |
-          unzip -o OnAirPlay_Proyecto_Reconstruido.zip -d .
-          test -f OnAirPlay/app/build.gradle.kts
-          test -f OnAirPlay/settings.gradle.kts
-
       - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-            - name: Configurar Android SDK
+      - name: Configurar Android SDK
         uses: android-actions/setup-android@v4
         with:
           accept-android-sdk-licenses: true
           packages: platform-tools
 
-
-      - name: Instalar SDK
+      - name: Instalar SDK de compilación
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
+      - name: Descomprimir proyecto Android
+        run: |
+          unzip -o OnAirPlay_Proyecto_Reconstruido.zip -d .
+          test -f OnAirPlay/app/build.gradle.kts
+          test -f OnAirPlay/settings.gradle.kts
 
       - name: Compilar OnAirPlay
         env:
